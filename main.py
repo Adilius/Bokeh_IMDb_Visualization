@@ -64,7 +64,8 @@ y_axis = Select(title="Y-Axis", options=list(axis_map.keys()), value="IMDb score
 # Tooltips shown when hover over point 
 TOOLTIPS = [
     ("Title", "@title"),
-    ("Year", "@year")
+    ("Year", "@year"),
+    ("Value", "@value{%0.2f}")
 ]
 
 # Color mapper
@@ -83,7 +84,7 @@ def select_movies():
     contentRating_value = contentRating.value
     
     # Selected movies
-    selected = movies
+    selected = movies # TODO: Numerical limits
 
     # Filter based on select widget
     if (language_value != "All"):
@@ -101,19 +102,49 @@ def select_movies():
 
 # Updates plot based on new selectiong
 def update():
-    selected_movies = select_movies()
-    x_name = axis_map[x_axis.value]
-    y_name = axis_map[y_axis.value]
+    selected_movies = select_movies()   # Update selected movies
+    x_name = axis_map[x_axis.value]     # Get name of current x-axis
+    y_name = axis_map[y_axis.value]     # Get name of curreny y-axis
 
-    plot_figure.xaxis.axis_label = x_axis.value
-    plot_figure.yaxis.axis_label = y_axis.value
-    plot_figure.title.text = "%d movies selected" % len(selected_movies)
+    print("New x_name:", x_name)
+    print("New y_name:", y_name)
 
+    # Update the tooltip (if imdb_score, fix imdb_score float)
+    if (y_name == "imdb_score"):
+        print("imdb_score tooltip")
+        TOOLTIPS = [
+            ("Title", "@title"),
+            ("Year", "@year"),
+            ("Value", "@value{%0.2f}")
+        ]
+    else:
+        print("Regular tooltip")
+        TOOLTIPS = [
+            ("Title", "@title"),
+            ("Year", "@year"),
+            ("Value", "@value")
+        ]
+
+    # Update color mapper
+    mapper = {}
+    mapper = linear_cmap(field_name='y', palette=Spectral6, low=min(movies[y_name].tolist()), high=max(movies[y_name].tolist()))
+
+    # Update plot figure
+    #plot_figure = figure(height=500, width=600, title="", toolbar_location=None, tooltips=TOOLTIPS, sizing_mode="scale_both")
+    plot_figure.circle(x="x", y="y", source=source, size=6, color=mapper, line_color=mapper)
+
+    # Update labels
+    plot_figure.xaxis.axis_label = x_axis.value # Set x-axis label
+    plot_figure.yaxis.axis_label = y_axis.value # Set y-axis label
+    plot_figure.title.text = "%d movies selected" % len(selected_movies)    # Set plot figure title
+
+    # Create new source data
     source.data = dict(
         x = selected_movies[x_name],
         y = selected_movies[y_name],
         title = selected_movies['movie_title'],
-        year = selected_movies['title_year']
+        year = selected_movies['title_year'],
+        value = selected_movies[y_name]
     )
 
 # When any control input changes, update plot
