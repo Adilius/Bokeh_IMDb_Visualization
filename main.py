@@ -1,10 +1,12 @@
 import pandas as pd
 
-from os.path import dirname, join
+from os.path import dirname, join   # Used to get description.html
 
-from bokeh.io import curdoc
-from bokeh.layouts import column, row
-from bokeh.plotting import figure, show, save
+from bokeh.io import curdoc # Updating document
+from bokeh.layouts import column, row   # Used for layout
+from bokeh.transform import linear_cmap # Used for color mapping
+from bokeh.plotting import figure
+from bokeh.palettes import Spectral6
 from bokeh.models import ColumnDataSource, Select, Div, Slider, TextInput
 from bokeh.models.widgets import DataTable, DateFormatter, TableColumn
 
@@ -20,13 +22,6 @@ movies.sort_index(axis=1, inplace=True)  #Sort by name
 
 # Create ColumnDataSource to be used for plotting
 source = ColumnDataSource(data=dict(x=[], y=[], title=[], year=[]))
-
-# Get number of each unique color
-movies_group = movies['color'].value_counts()
-#print(movies_group)
-
-movies_group = movies['actor_1_name'].value_counts()
-#print(movies_group)
 
 # Create axis map dictionary
 axis_map = {
@@ -65,23 +60,27 @@ contentRating = Select(title='Content rating', value='All', options=get_unique_l
 x_axis = Select(title="X-Axis", options=list(axis_map.keys()), value="Year")
 y_axis = Select(title="Y-Axis", options=list(axis_map.keys()), value="IMDb score")
 
+# TODO: update when selecting new y
 # Tooltips shown when hover over point 
 TOOLTIPS = [
     ("Title", "@title"),
     ("Year", "@year")
 ]
 
+# Color mapper
+mapper = linear_cmap(field_name='y', palette=Spectral6, low=min(movies['imdb_score'].tolist()), high=max(movies['imdb_score'].tolist()))
+
 # Creating plot figure
 plot_figure = figure(height=500, width=600, title="", toolbar_location=None, tooltips=TOOLTIPS, sizing_mode="scale_both")
-plot_figure.circle(x="x", y="y", source=source, size=7, color=None, line_color=None)
+plot_figure.circle(x="x", y="y", source=source, size=6, color=mapper, line_color=mapper)
 
 # Selects movies based on inputs
 def select_movies():
     language_value = language.value
-    #country_value = country.value
-    #color_value = color.value
-    #genre_value = genre.value
-    #contentRating_value = contentRating.value
+    country_value = country.value
+    color_value = color.value
+    genre_value = genre.value
+    contentRating_value = contentRating.value
     
     # Selected movies
     selected = movies
@@ -89,6 +88,14 @@ def select_movies():
     # Filter based on select widget
     if (language_value != "All"):
         selected = selected[selected['language'].str.contains(language_value)==True]
+    if (country_value != "All"):
+        selected = selected[selected['country'].str.contains(country_value)==True]
+    if (color_value != "All"):
+        selected = selected[selected['color'].str.contains(color_value)==True]
+    if (genre_value != "All"):
+        selected = selected[selected['genres'].str.contains(genre_value)==True]
+    if (contentRating_value != "All"):
+        selected = selected[selected['content_rating'].str.contains(contentRating_value)==True]
 
     return selected
 
@@ -101,6 +108,7 @@ def update():
     plot_figure.xaxis.axis_label = x_axis.value
     plot_figure.yaxis.axis_label = y_axis.value
     plot_figure.title.text = "%d movies selected" % len(selected_movies)
+
     source.data = dict(
         x = selected_movies[x_name],
         y = selected_movies[y_name],
@@ -108,9 +116,8 @@ def update():
         year = selected_movies['title_year']
     )
 
-# List of all controls
+# When any control input changes, update plot
 controls = [language, country, genre, color, contentRating, x_axis, y_axis]
-
 for control in controls:
     control.on_change('value', lambda attr, old, new: update())
 
