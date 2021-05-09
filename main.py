@@ -5,8 +5,8 @@ from os.path import dirname, join   # Used to get description.html
 from bokeh.io import curdoc # Updating document
 from bokeh.layouts import column, row   # Used for layout
 from bokeh.transform import linear_cmap # Used for color mapping
-from bokeh.plotting import figure
-from bokeh.palettes import Spectral11
+from bokeh.plotting import figure       # Plot figure
+from bokeh.palettes import Spectral11   # colors for colormap
 from bokeh.models import ColumnDataSource, Select, Div, Slider, TextInput, HoverTool
 from bokeh.models.widgets import DataTable, DateFormatter, TableColumn
 
@@ -49,36 +49,25 @@ def get_unique_genres(dataframe_column):
     return_list.insert(0, "All")
     return return_list
 
-# Create input controls
+# Create select input controls
 language = Select(title='Languages', value='All', options=get_unique_list(movies['language']))
 country = Select(title='Countries', value='All', options=get_unique_list(movies['country']))
 genre = Select(title='Genre', value='All', options=get_unique_genres(movies['genres']))
 color = Select(title='Color', value='All', options=get_unique_list(movies['color']))
 contentRating = Select(title='Content rating', value='All', options=get_unique_list(movies['content_rating']))
 
+# Create slider input controls
+#budget = 
+
 # Create axis controls
 x_axis = Select(title="X-Axis", options=list(axis_map.keys()), value="Year")
 y_axis = Select(title="Y-Axis", options=list(axis_map.keys()), value="IMDb score")
 
-print("score")
-print(movies['imdb_score'])
-
-# TODO: update when selecting new y
-# Tooltips shown when hover over point
-hover = HoverTool(
-    tooltips = [
-    ("Title", "@title"),
-    ("Year", "@year"),
-    ("Value", "@value")
-    ]
-)
-
 # Color mapper
-mapper = linear_cmap(field_name='y', palette=Spectral11, low=min(movies['imdb_score'].tolist()), high=max(movies['imdb_score'].tolist()))
+mapper = linear_cmap(field_name='y', palette=Spectral11, low=min(movies[axis_map[y_axis.value]].tolist()), high=max(movies[axis_map[y_axis.value]].tolist()))
 
 # Creating plot figure
 plot_figure = figure(height=500, width=600, title="", toolbar_location=None, sizing_mode="scale_both")
-plot_figure.add_tools(hover)
 plot_figure.circle(x="x", y="y", source=source, size=6, color=mapper, line_color=mapper)
 
 # Selects movies based on inputs
@@ -112,29 +101,14 @@ def update():
     x_name = axis_map[x_axis.value]     # Get name of current x-axis
     y_name = axis_map[y_axis.value]     # Get name of curreny y-axis
 
-    print("New x_name:", x_name)
-    print("New y_name:", y_name)
-
-    # Update the tooltip (if imdb_score, fix imdb_score float)
-    if (y_name == "imdb_score"):
-        print("imdb_score tooltip")
-        hover = HoverTool(
-            tooltips = [
-            ("Title", "@title"),
-            ("Year", "@year"),
-            ("Value", "@value{0.f}")
-        ])
-        plot_figure.add_tools(hover)
-    else:
-        print("Regular tooltip")
-        hover = HoverTool(
-            tooltips = [
-            ("Title", "@title"),
-            ("Year", "@year"),
-            ("Value", "@value")
-        ])
-        plot_figure.add_tools(hover)
-
+    # Update the tooltip (if imdb_score format float, otherwise format normal numerical)
+    hover = HoverTool(
+        tooltips = [
+        ("Title", "@title"),
+        ("Year", "@year"),
+        ("Value", "@value{0.f}" if y_name == "imdb_score" else "@value")
+    ])
+    plot_figure.add_tools(hover)
 
     # Update color mapper
     mapper = {}
@@ -158,7 +132,7 @@ def update():
         value = selected_movies[y_name]
     )
 
-# When any control input changes, update plot
+# On change controls, run update()
 controls = [language, country, genre, color, contentRating, x_axis, y_axis]
 for control in controls:
     control.on_change('value', lambda attr, old, new: update())
@@ -172,5 +146,6 @@ layout = column(description, row(inputs, plot_figure), sizing_mode="scale_both")
 # Initial load of data
 update()
 
+# Add layout to page and name it
 curdoc().add_root(layout)
 curdoc().title = "Movies"
