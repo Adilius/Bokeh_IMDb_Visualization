@@ -6,8 +6,8 @@ from bokeh.io import curdoc # Updating document
 from bokeh.layouts import column, row   # Used for layout
 from bokeh.transform import linear_cmap # Used for color mapping
 from bokeh.plotting import figure
-from bokeh.palettes import Spectral6
-from bokeh.models import ColumnDataSource, Select, Div, Slider, TextInput
+from bokeh.palettes import Spectral11
+from bokeh.models import ColumnDataSource, Select, Div, Slider, TextInput, HoverTool
 from bokeh.models.widgets import DataTable, DateFormatter, TableColumn
 
 # Description of our visualization
@@ -60,19 +60,25 @@ contentRating = Select(title='Content rating', value='All', options=get_unique_l
 x_axis = Select(title="X-Axis", options=list(axis_map.keys()), value="Year")
 y_axis = Select(title="Y-Axis", options=list(axis_map.keys()), value="IMDb score")
 
+print("score")
+print(movies['imdb_score'])
+
 # TODO: update when selecting new y
-# Tooltips shown when hover over point 
-TOOLTIPS = [
+# Tooltips shown when hover over point
+hover = HoverTool(
+    tooltips = [
     ("Title", "@title"),
     ("Year", "@year"),
-    ("Value", "@value{%0.2f}")
-]
+    ("Value", "@value")
+    ]
+)
 
 # Color mapper
-mapper = linear_cmap(field_name='y', palette=Spectral6, low=min(movies['imdb_score'].tolist()), high=max(movies['imdb_score'].tolist()))
+mapper = linear_cmap(field_name='y', palette=Spectral11, low=min(movies['imdb_score'].tolist()), high=max(movies['imdb_score'].tolist()))
 
 # Creating plot figure
-plot_figure = figure(height=500, width=600, title="", toolbar_location=None, tooltips=TOOLTIPS, sizing_mode="scale_both")
+plot_figure = figure(height=500, width=600, title="", toolbar_location=None, sizing_mode="scale_both")
+plot_figure.add_tools(hover)
 plot_figure.circle(x="x", y="y", source=source, size=6, color=mapper, line_color=mapper)
 
 # Selects movies based on inputs
@@ -112,22 +118,27 @@ def update():
     # Update the tooltip (if imdb_score, fix imdb_score float)
     if (y_name == "imdb_score"):
         print("imdb_score tooltip")
-        TOOLTIPS = [
+        hover = HoverTool(
+            tooltips = [
             ("Title", "@title"),
             ("Year", "@year"),
-            ("Value", "@value{%0.2f}")
-        ]
+            ("Value", "@value{0.f}")
+        ])
+        plot_figure.add_tools(hover)
     else:
         print("Regular tooltip")
-        TOOLTIPS = [
+        hover = HoverTool(
+            tooltips = [
             ("Title", "@title"),
             ("Year", "@year"),
             ("Value", "@value")
-        ]
+        ])
+        plot_figure.add_tools(hover)
+
 
     # Update color mapper
     mapper = {}
-    mapper = linear_cmap(field_name='y', palette=Spectral6, low=min(movies[y_name].tolist()), high=max(movies[y_name].tolist()))
+    mapper = linear_cmap(field_name='y', palette=Spectral11, low=min(movies[y_name].tolist()), high=max(movies[y_name].tolist()))
 
     # Update plot figure
     #plot_figure = figure(height=500, width=600, title="", toolbar_location=None, tooltips=TOOLTIPS, sizing_mode="scale_both")
