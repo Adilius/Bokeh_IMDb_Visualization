@@ -56,9 +56,6 @@ genre = Select(title='Genre', value='All', options=get_unique_genres(movies['gen
 color = Select(title='Color', value='All', options=get_unique_list(movies['color']))
 contentRating = Select(title='Content rating', value='All', options=get_unique_list(movies['content_rating']))
 
-# Create slider input controls
-#budget = 
-
 # Create axis controls
 x_axis = Select(title="X-Axis", options=list(axis_map.keys()), value="Year")
 y_axis = Select(title="Y-Axis", options=list(axis_map.keys()), value="IMDb score")
@@ -78,8 +75,8 @@ def select_movies():
     genre_value = genre.value
     contentRating_value = contentRating.value
     
-    # Selected movies
-    selected = movies # TODO: Numerical limits
+    # Create selection
+    selected = movies
 
     # Filter based on select widget
     if (language_value != "All"):
@@ -111,7 +108,6 @@ def update():
     plot_figure.add_tools(hover)
 
     # Update color mapper
-    mapper = {}
     mapper = linear_cmap(field_name='y', palette=Spectral11, low=min(movies[y_name].tolist()), high=max(movies[y_name].tolist()))
 
     # Update plot figure
