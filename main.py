@@ -184,7 +184,7 @@ left_axis_controls = [left_y_axis, left_x_axis]
 for control in left_axis_controls:
     control.on_change('value', lambda attr, old, new: update_left())
 
-right_axis_controls = [right_y_axis, right_x_axis]
+right_axis_controls = [right_y_axis, right_x_axis ]
 for control in right_axis_controls:
     control.on_change('value', lambda attr, old, new: update_right())
 
