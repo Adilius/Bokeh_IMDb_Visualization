@@ -11,7 +11,7 @@ from bokeh.models import ColumnDataSource, Select, Div, Slider, TextInput, Hover
 from bokeh.models.widgets import DataTable, DateFormatter, TableColumn
 
 # Description of our visualization
-description = Div(text=open(join(dirname(__file__), "description.html")).read(), sizing_mode="stretch_width")
+description = Div(text=open("description.html").read(), sizing_mode="stretch_width")
 
 # Import dataset into pandas dataframe
 movies = pd.read_csv('imdb_movie_metadata.csv', encoding="utf8")    # Read data into dataframe
@@ -189,14 +189,14 @@ for control in right_axis_controls:
     control.on_change('value', lambda attr, old, new: update_right())
 
 # Create input layout
-inputs = column(*input_controls, width=320)
-left_axis_input = row(*left_axis_controls, width=320)
-right_axis_input = row(*right_axis_controls, width=320)
+inputs = column(*input_controls, width=300, height=900)
+left_axis_input = row(*left_axis_controls, width=600 ,height=100)
+right_axis_input = row(*right_axis_controls, width=600,  height=100)
 
 # Create layout
-left_plot_layout = column(left_plot_figure, left_axis_input, sizing_mode="fixed")
-right_plot_layout = column(right_plot_figure, right_axis_input, sizing_mode="fixed")
-layout = column(description, row(inputs, left_plot_layout, right_plot_layout), sizing_mode="fixed")
+left_plot_layout = column(left_plot_figure, left_axis_input, sizing_mode="fixed", width=600, height=700)
+right_plot_layout = column(right_plot_figure, right_axis_input, sizing_mode="fixed", width=600, height=700)
+layout = column(description, row(inputs, left_plot_layout, right_plot_layout, sizing_mode="fixed", width=2100, height=900), sizing_mode="fixed", width=2700, height=1300)
 
 # Initial load of data
 update_both()
