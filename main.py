@@ -21,7 +21,8 @@ movies.reset_index(drop=True ,inplace=True)  # Reset index
 movies.sort_index(axis=1, inplace=True)  #Sort by name
 
 # Create ColumnDataSource to be used for plotting
-source = ColumnDataSource(data=dict(x=[], y=[], title=[], year=[]))
+left_source = ColumnDataSource(data=dict(x=[], y=[], title=[], year=[]))
+right_source = ColumnDataSource(data=dict(x=[], y=[], title=[], year=[]))
 
 # Create axis map dictionary
 axis_map = {
@@ -56,16 +57,21 @@ genre = Select(title='Genre', value='All', options=get_unique_genres(movies['gen
 color = Select(title='Color', value='All', options=get_unique_list(movies['color']))
 contentRating = Select(title='Content rating', value='All', options=get_unique_list(movies['content_rating']))
 
-# Create axis controls
-x_axis = Select(title="X-Axis", options=list(axis_map.keys()), value="Year")
-y_axis = Select(title="Y-Axis", options=list(axis_map.keys()), value="IMDb score")
+# Create left axis controls
+left_x_axis = Select(title="X-Axis", options=list(axis_map.keys()), value="Year")
+left_y_axis = Select(title="Y-Axis", options=list(axis_map.keys()), value="IMDb score")
+right_x_axis = Select(title="X-Axis", options=list(axis_map.keys()), value="Year")
+right_y_axis = Select(title="Y-Axis", options=list(axis_map.keys()), value="IMDb score")
 
-# Color mapper
-mapper = linear_cmap(field_name='y', palette=Spectral11, low=min(movies[axis_map[y_axis.value]].tolist()), high=max(movies[axis_map[y_axis.value]].tolist()))
+# Color left_mapper
+left_mapper = linear_cmap(field_name='y', palette=Spectral11, low=min(movies[axis_map[left_y_axis.value]].tolist()), high=max(movies[axis_map[left_y_axis.value]].tolist()))
+right_mapper = linear_cmap(field_name='y', palette=Spectral11, low=min(movies[axis_map[right_y_axis.value]].tolist()), high=max(movies[axis_map[right_y_axis.value]].tolist()))
 
 # Creating plot figure
-plot_figure = figure(height=500, width=600, title="", toolbar_location=None, sizing_mode="scale_both")
-plot_figure.circle(x="x", y="y", source=source, size=6, color=mapper, line_color=mapper)
+left_plot_figure = figure(height=600, width=600, title="", toolbar_location=None, sizing_mode="scale_both")
+left_plot_figure.circle(x="x", y="y", source=left_source, size=6, color=left_mapper, line_color=left_mapper)
+right_plot_figure = figure(height=600, width=600, title="", toolbar_location=None, sizing_mode="scale_both")
+right_plot_figure.circle(x="x", y="y", source=right_source, size=6, color=right_mapper, line_color=right_mapper)
 
 # Selects movies based on inputs
 def select_movies():
@@ -92,11 +98,11 @@ def select_movies():
 
     return selected
 
-# Updates plot based on new selectiong
-def update():
+# Updates left plot based on new selectiong
+def update_left():
     selected_movies = select_movies()   # Update selected movies
-    x_name = axis_map[x_axis.value]     # Get name of current x-axis
-    y_name = axis_map[y_axis.value]     # Get name of curreny y-axis
+    x_name = axis_map[left_x_axis.value]     # Get name of current x-axis
+    y_name = axis_map[left_y_axis.value]     # Get name of curreny y-axis
 
     # Update the tooltip (if imdb_score format float, otherwise format normal numerical)
     hover = HoverTool(
@@ -105,22 +111,22 @@ def update():
         ("Year", "@year"),
         ("Value", "@value{0.f}" if y_name == "imdb_score" else "@value")
     ])
-    plot_figure.add_tools(hover)
+    left_plot_figure.add_tools(hover)
 
-    # Update color mapper
-    mapper = linear_cmap(field_name='y', palette=Spectral11, low=min(movies[y_name].tolist()), high=max(movies[y_name].tolist()))
+    # Update color left_mapper
+    left_mapper = linear_cmap(field_name='y', palette=Spectral11, low=min(movies[y_name].tolist()), high=max(movies[y_name].tolist()))
 
     # Update plot figure
-    #plot_figure = figure(height=500, width=600, title="", toolbar_location=None, tooltips=TOOLTIPS, sizing_mode="scale_both")
-    plot_figure.circle(x="x", y="y", source=source, size=6, color=mapper, line_color=mapper)
+    #left_plot_figure = figure(height=500, width=600, title="", toolbar_location=None, tooltips=TOOLTIPS, sizing_mode="scale_both")
+    left_plot_figure.circle(x="x", y="y", source=left_source, size=6, color=left_mapper, line_color=left_mapper)
 
     # Update labels
-    plot_figure.xaxis.axis_label = x_axis.value # Set x-axis label
-    plot_figure.yaxis.axis_label = y_axis.value # Set y-axis label
-    plot_figure.title.text = "%d movies selected" % len(selected_movies)    # Set plot figure title
+    left_plot_figure.xaxis.axis_label = left_x_axis.value # Set x-axis label
+    left_plot_figure.yaxis.axis_label = left_y_axis.value # Set y-axis label
+    left_plot_figure.title.text = "%d movies selected" % len(selected_movies)    # Set plot figure title
 
     # Create new source data
-    source.data = dict(
+    left_source.data = dict(
         x = selected_movies[x_name],
         y = selected_movies[y_name],
         title = selected_movies['movie_title'],
@@ -128,19 +134,72 @@ def update():
         value = selected_movies[y_name]
     )
 
+# Updates right plot based on new selectiong
+def update_right():
+    selected_movies = select_movies()   # Update selected movies
+    x_name = axis_map[right_x_axis.value]     # Get name of current x-axis
+    y_name = axis_map[right_y_axis.value]     # Get name of curreny y-axis
+
+    # Update the tooltip (if imdb_score format float, otherwise format normal numerical)
+    hover = HoverTool(
+        tooltips = [
+        ("Title", "@title"),
+        ("Year", "@year"),
+        ("Value", "@value{0.f}" if y_name == "imdb_score" else "@value")
+    ])
+    right_plot_figure.add_tools(hover)
+
+    # Update color left_mapper
+    right_mapper = linear_cmap(field_name='y', palette=Spectral11, low=min(movies[y_name].tolist()), high=max(movies[y_name].tolist()))
+
+    # Update plot figure
+    #left_plot_figure = figure(height=500, width=600, title="", toolbar_location=None, tooltips=TOOLTIPS, sizing_mode="scale_both")
+    right_plot_figure.circle(x="x", y="y", source=right_source, size=6, color=right_mapper, line_color=right_mapper)
+
+    # Update labels
+    right_plot_figure.xaxis.axis_label = right_x_axis.value # Set x-axis label
+    right_plot_figure.yaxis.axis_label = right_y_axis.value # Set y-axis label
+    right_plot_figure.title.text = "%d movies selected" % len(selected_movies)    # Set plot figure title
+
+    # Create new source data
+    right_source.data = dict(
+        x = selected_movies[x_name],
+        y = selected_movies[y_name],
+        title = selected_movies['movie_title'],
+        year = selected_movies['title_year'],
+        value = selected_movies[y_name]
+    )
+
+# Updates both plots
+def update_both():
+    update_left()
+    update_right()
+
 # On change controls, run update()
-controls = [language, country, genre, color, contentRating, x_axis, y_axis]
-for control in controls:
-    control.on_change('value', lambda attr, old, new: update())
+input_controls = [language, country, genre, color, contentRating]
+for control in input_controls:
+    control.on_change('value', lambda attr, old, new: update_both())
+
+left_axis_controls = [left_y_axis, left_x_axis]
+for control in left_axis_controls:
+    control.on_change('value', lambda attr, old, new: update_left())
+
+right_axis_controls = [right_y_axis, right_x_axis]
+for control in right_axis_controls:
+    control.on_change('value', lambda attr, old, new: update_right())
 
 # Create input layout
-inputs = column(*controls, width=320)
+inputs = column(*input_controls, width=320)
+left_axis_input = row(*left_axis_controls, width=320)
+right_axis_input = row(*right_axis_controls, width=320)
 
 # Create layout
-layout = column(description, row(inputs, plot_figure), sizing_mode="scale_both")
+left_plot_layout = column(left_plot_figure, left_axis_input, sizing_mode="fixed")
+right_plot_layout = column(right_plot_figure, right_axis_input, sizing_mode="fixed")
+layout = column(description, row(inputs, left_plot_layout, right_plot_layout), sizing_mode="fixed")
 
 # Initial load of data
-update()
+update_both()
 
 # Add layout to page and name it
 curdoc().add_root(layout)
